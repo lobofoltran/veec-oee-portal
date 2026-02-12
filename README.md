@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VEEC OEE Portal
 
-## Getting Started
+Portal web para operação interna com autenticação, dashboard e módulos de cadastro (fábricas e usuários).
 
-First, run the development server:
+## Tecnologias
+
+- Next.js 16 (App Router)
+- React 19 + TypeScript
+- NextAuth (credentials)
+- Prisma + PostgreSQL
+- Tailwind CSS v4 + shadcn/ui
+- Vitest + Playwright
+
+## Pré-requisitos
+
+- Node.js 20+
+- pnpm 9+
+- PostgreSQL disponível
+
+## Configuração
+
+1. Instale dependências:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Configure variáveis de ambiente em `.env`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+DATABASE_URL=postgresql://...
+NEXTAUTH_SECRET=...
+NEXTAUTH_URL=http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Gere client Prisma e sincronize schema:
 
-## Learn More
+```bash
+pnpm prisma generate
+pnpm prisma db push
+```
 
-To learn more about Next.js, take a look at the following resources:
+4. Popule dados iniciais (roles + admin):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm tsx prisma/seed.ts
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Credenciais padrão de desenvolvimento (seed):
 
-## Deploy on Vercel
+- Email: `admin@veec.com`
+- Senha: `admin123`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Executar
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+pnpm dev
+```
+
+Aplicação em `http://localhost:3000`.
+
+## Scripts
+
+- `pnpm dev`: ambiente local
+- `pnpm build`: build de produção
+- `pnpm start`: iniciar build
+- `pnpm lint`: lint
+- `pnpm test`: testes unitários/integrados (Vitest)
+- `pnpm coverage`: cobertura Vitest
+- `pnpm test:e2e`: testes E2E (Playwright)
+
+## Rotas Principais
+
+- `/login`: autenticação
+- `/dashboard`: visão executiva
+- `/factories`: CRUD de fábricas
+- `/users`: CRUD de usuários
+
+Rotas protegidas por middleware (`proxy.ts`): `/dashboard`, `/factories`, `/users`.
+
+## Autorização (RBAC)
+
+Papéis:
+
+- `ADMIN`
+- `MANAGER`
+- `OPERATOR`
+
+Permissões:
+
+- Gestão de fábricas e usuários: `ADMIN` e `MANAGER`.
+- Demais perfis podem autenticar, mas sem acesso a ações de gestão.
+
+## Estrutura por Domínio
+
+Cada módulo em `app/(app)/<dominio>` segue:
+
+- `_lib/schema.ts`: validação
+- `_lib/repository.ts`: Prisma
+- `_lib/service.ts`: regras de negócio
+- `_lib/actions.ts`: server actions
+- `_components/*`: UI
+
+## Navegação e UX
+
+- Sidebar com estados `hover` e `selecionado`.
+- Breadcrumb dinâmico no header.
+- Menu de usuário com:
+  - dados da sessão autenticada
+  - troca de tema (`Claro`, `Escuro`, `Sistema`)
+  - logout
+
+## Testes
+
+- Unitários: `tests/unit`
+- Integração: `tests/integration`
+- E2E: `tests/e2e`
+
+Playwright sobe `next dev` automaticamente via `playwright.config.ts`.
+
+## Documentação Complementar
+
+- `ARCHITECTURE.md`: visão técnica e fluxos
+- `AGENTS.md`: guia de contribuição para agentes/automações
