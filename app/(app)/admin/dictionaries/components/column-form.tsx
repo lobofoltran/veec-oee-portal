@@ -208,9 +208,29 @@ export function ColumnForm({
             name="type"
             render={({ field }) => (
               <Select
-                value={field.value}
+                value={field.value ?? "string"}
                 onValueChange={(value) => {
-                  field.onChange(value);
+                  setValue("type", value as ColumnFormInput["type"], {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                    shouldValidate: true,
+                  });
+
+                  // Limpa campos condicionais para evitar NaN/valores inválidos
+                  // quando o tipo é alterado e os inputs ficam ocultos.
+                  if (value !== "string") {
+                    setValue("length", undefined);
+                  }
+                  if (value !== "number" && value !== "decimal") {
+                    setValue("precision", undefined);
+                  }
+                  if (value !== "decimal") {
+                    setValue("scale", undefined);
+                  }
+                  if (value !== "uuid") {
+                    setValue("autoGenerate", false);
+                  }
+
                   if (value !== "reference") {
                     setValue("fkTableId", undefined);
                     setValue("fkColumnName", undefined);
@@ -218,6 +238,7 @@ export function ColumnForm({
                   }
                   if (value !== "select") {
                     setValue("options", []);
+                    setValue("default", "");
                   }
                 }}
               >
