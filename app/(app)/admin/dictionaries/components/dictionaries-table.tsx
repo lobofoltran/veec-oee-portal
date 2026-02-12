@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Database, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { ArrowRight, Database, Eye, MoreVertical, Pencil, Settings2, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -130,9 +130,25 @@ export function DictionariesTable({ rows, page, pageSize, total, totalPages, q, 
                         <Button variant="ghost" size="icon" className="size-8"><MoreVertical className="size-4" /></Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem asChild><Link href={`/admin/dictionaries/${row.id}`}>Visualizar</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/dictionaries/${row.id}`}>
+                            <Eye className="mr-2 size-4" />
+                            Visualizar
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/crud/${row.schema}/${row.name}`}>
+                            <ArrowRight className="mr-2 size-4" />
+                            Ir para página
+                          </Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem asChild><Link href={`/admin/dictionaries/${row.id}/edit`}><Pencil className="mr-2 size-4" />Editar</Link></DropdownMenuItem>
-                        <DropdownMenuItem asChild><Link href={`/admin/dictionaries/${row.id}/columns`}>Gerenciar colunas</Link></DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/admin/dictionaries/${row.id}/columns`}>
+                            <Settings2 className="mr-2 size-4" />
+                            Gerenciar colunas
+                          </Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive" onSelect={(event) => { event.preventDefault(); setTargetDeleteId(row.id); }}><Trash2 className="mr-2 size-4" />Excluir</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
