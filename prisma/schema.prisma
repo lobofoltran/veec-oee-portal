@@ -56,3 +56,94 @@ model Factory {
   @@index([name])
   @@index([isActive])
 }
+
+enum DictionaryColumnType {
+  STRING
+  TEXT
+  INT
+  DECIMAL
+  BOOLEAN
+  DATE
+  DATETIME
+  UUID
+  FK
+  SELECT
+}
+
+enum MenuAccessRole {
+  ADMIN
+  MANAGER
+  OPERATOR
+  USER
+}
+
+model DictionaryTable {
+  id           String             @id @default(uuid())
+  schema       String             @default("public")
+  name         String
+  label        String
+  description  String?
+  isSystem     Boolean            @default(false)
+  columns      DictionaryColumn[] @relation("TableColumns")
+  referencedBy DictionaryColumn[] @relation("ForeignTable")
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@unique([schema, name])
+}
+
+model DictionaryColumn {
+  id           String               @id @default(uuid())
+  tableId      String
+  name         String
+  label        String
+  type         DictionaryColumnType
+  required     Boolean              @default(false)
+  unique       Boolean              @default(false)
+  defaultValue String?
+  isPrimaryKey Boolean              @default(false)
+  fkTableId    String?
+  fkColumnName String?              @default("id")
+  displayField String?
+  optionsJson  String?
+  autoGenerate Boolean              @default(false)
+  length       Int?
+  precision    Int?
+  scale        Int?
+  order        Int
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  table        DictionaryTable      @relation("TableColumns", fields: [tableId], references: [id], onDelete: Cascade)
+  fkTable      DictionaryTable?     @relation("ForeignTable", fields: [fkTableId], references: [id], onDelete: SetNull)
+
+  @@unique([tableId, name])
+}
+
+model Menu {
+  id        String      @id @default(uuid())
+  label     String
+  icon      String
+  href      String?
+  parentId  String?
+  order     Int
+  enabled   Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  parent    Menu?       @relation("MenuTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children  Menu[]      @relation("MenuTree")
+  roles     MenuRole[]
+
+  @@unique([parentId, order])
+}
+
+model MenuRole {
+  id     String         @id @default(uuid())
+  menuId String
+  role   MenuAccessRole
+
+  menu   Menu           @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  @@unique([menuId, role])
+}

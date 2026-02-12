@@ -4,7 +4,6 @@ import bcrypt from "bcrypt";
 async function main() {
   console.log("Seeding database...");
 
-  // ROLES
   const roles = ["ADMIN", "MANAGER", "OPERATOR"];
 
   for (const role of roles) {
@@ -15,38 +14,43 @@ async function main() {
     });
   }
 
-  // ADMIN PASSWORD
-  const passwordHash = await bcrypt.hash("admin123", 10);
+  const adminEmail = "admin@veec.com";
+  const adminPassword = "admin123";
+  const passwordHash = await bcrypt.hash(adminPassword, 10);
 
-  // ADMIN USER
   const admin = await prisma.user.upsert({
-    where: { email: "admin@veec.com" },
-    update: {},
+    where: { email: adminEmail },
+    update: {
+      name: "Admin",
+      active: true,
+      password: passwordHash,
+    },
     create: {
       name: "Admin",
-      email: "admin@veec.com",
+      email: adminEmail,
       password: passwordHash,
+      active: true,
     },
   });
 
-  const adminRole = await prisma.role.findUnique({
-    where: { name: "ADMIN" },
-  });
+  const adminRole = await prisma.role.findUniqueOrThrow({ where: { name: "ADMIN" } });
 
-  if (adminRole) {
-    await prisma.userRole.upsert({
-      where: {
-        userId_roleId: {
-          userId: admin.id,
-          roleId: adminRole.id,
-        },
-      },
-      update: {},
-      create: {
+  await prisma.userRole.upsert({
+    where: {
+      userId_roleId: {
         userId: admin.id,
         roleId: adminRole.id,
       },
-    });
+    },
+    update: {},
+    create: {
+      userId: admin.id,
+      roleId: adminRole.id,
+    },
+  });
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`[DEV] Admin credentials: ${adminEmail} / ${adminPassword}`);
   }
 
   console.log("Seed finished.");
