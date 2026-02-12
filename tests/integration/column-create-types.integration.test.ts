@@ -2,8 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { createColumnAction } from "@/app/(app)/admin/dictionaries/actions/create-column";
 import { prisma } from "@/lib/prisma";
+import { isDatabaseAvailable } from "./helpers/db-availability";
 
-describe("create column action type mapping integration", () => {
+const dbAvailable = await isDatabaseAvailable();
+const describeIfDb = dbAvailable ? describe : describe.skip;
+
+describeIfDb("create column action type mapping integration", () => {
   it("creates non-text column types without requiring post-edit", async () => {
     const suffix = Date.now();
     const table = await prisma.dictionaryTable.create({

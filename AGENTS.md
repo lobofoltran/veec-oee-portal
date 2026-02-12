@@ -17,6 +17,8 @@ Manter e evoluir o **VEEC OEE Portal** com segurança, previsibilidade e consist
 5. Use componentes de `components/ui/*` (shadcn) antes de criar UI customizada.
 6. Não acesse banco diretamente em componentes de UI.
 7. Em rotas protegidas, mantenha coerência com `proxy.ts`.
+8. Toda feature deve incluir testes (unitário, integração e/ou e2e conforme impacto).
+9. É mandatório que a suíte de testes esteja passando antes de concluir qualquer entrega.
 
 ## Fluxo Arquitetural Obrigatório
 
@@ -47,6 +49,8 @@ Para criação/edição/exclusão:
 - Em `admin/menus`, a ordenação pode ser feita por drag and drop na grade quando `sortBy=order` e `sortDir=asc`.
 
 ## Qualidade Mínima Antes de Entregar
+
+Obrigatório: não entregar com testes falhando.
 
 Execute:
 

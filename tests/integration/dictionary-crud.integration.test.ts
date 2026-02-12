@@ -4,8 +4,12 @@ import { addColumn, createPhysicalTable } from "@/lib/dictionary/ddl";
 import { createRow, deleteRow, listRows, updateRow } from "@/lib/dictionary/crud";
 import { getTableMetaById } from "@/lib/dictionary/loader";
 import { prisma } from "@/lib/prisma";
+import { isDatabaseAvailable } from "./helpers/db-availability";
 
-describe("dictionary + ddl + crud integration", () => {
+const dbAvailable = await isDatabaseAvailable();
+const describeIfDb = dbAvailable ? describe : describe.skip;
+
+describeIfDb("dictionary + ddl + crud integration", () => {
   let tableId = "";
   const schema = "public";
   const tableName = `it_customers_${Date.now()}`;

@@ -2,8 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { reorderMenusAction } from "@/app/(app)/admin/menus/actions/reorder-menus";
 import { prisma } from "@/lib/prisma";
+import { isDatabaseAvailable } from "./helpers/db-availability";
 
-describe("menu reorder action integration", () => {
+const dbAvailable = await isDatabaseAvailable();
+const describeIfDb = dbAvailable ? describe : describe.skip;
+
+describeIfDb("menu reorder action integration", () => {
   it("reorders menu items using drag ordering payload", async () => {
     const suffix = Date.now();
 

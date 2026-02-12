@@ -4,8 +4,12 @@ import { addColumn, createPhysicalTable } from "@/lib/dictionary/ddl";
 import { createRow } from "@/lib/dictionary/crud";
 import { getTableMetaById } from "@/lib/dictionary/loader";
 import { prisma } from "@/lib/prisma";
+import { isDatabaseAvailable } from "./helpers/db-availability";
 
-describe("dictionary fk validation integration", () => {
+const dbAvailable = await isDatabaseAvailable();
+const describeIfDb = dbAvailable ? describe : describe.skip;
+
+describeIfDb("dictionary fk validation integration", () => {
   const schema = "public";
   const parentName = `it_parents_${Date.now()}`;
   const childName = `it_children_${Date.now()}`;
