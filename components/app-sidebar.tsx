@@ -45,7 +45,7 @@ const data = {
   ],
   registrations: [
     {
-      name: "Factories",
+      name: "Fábricas",
       url: "/factories",
       icon: (
         <HugeiconsIcon icon={Database01Icon} strokeWidth={2} />
