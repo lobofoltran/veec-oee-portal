@@ -33,6 +33,10 @@ app/
     users/
       _components/
       _lib/
+    admin/
+      dictionaries/
+      menus/
+    crud/[schema]/[table]/
   api/auth/[...nextauth]/route.ts
 components/
   app-sidebar.tsx
@@ -43,6 +47,8 @@ lib/
   auth.ts
   prisma.ts
   rbac.ts
+  dictionary/*
+  menu/*
   generated/prisma/*
 prisma/
   schema.prisma
@@ -84,10 +90,7 @@ tests/
 
 ### Proteção de Rotas
 
-- Middleware em `proxy.ts`:
-  - `/dashboard/:path*`
-  - `/factories/:path*`
-  - `/users/:path*`
+- Middleware em `proxy.ts` protege área autenticada (`/dashboard`, `/factories`, `/users`, `/admin`, `/crud`).
 
 ### RBAC
 
@@ -96,15 +99,19 @@ tests/
   - `requireFactoriesSession`, `requireFactoriesManager`
   - `requireUsersSession`, `requireUsersManager`
 
-## Padrão de Módulo (Factories / Users)
+## Padrão de Módulo (Factories / Users / Admin)
 
 Cada domínio segue padrão consistente:
 
-- `_lib/schema.ts`: validação e parsing de query/form.
-- `_lib/repository.ts`: acesso Prisma.
-- `_lib/service.ts`: regras de negócio + mapeamento de erros Prisma.
-- `_lib/actions.ts`: server actions, autorização, `revalidatePath`.
-- `_components/*`: UI específica do domínio.
+- Domínios com `_lib`:
+  - `_lib/schema.ts`: validação e parsing de query/form.
+  - `_lib/repository.ts`: acesso Prisma.
+  - `_lib/service.ts`: regras de negócio + mapeamento de erros Prisma.
+  - `_lib/actions.ts`: server actions, autorização, `revalidatePath`.
+- Domínios em `admin/*`:
+  - `schema/*.ts`: validação de query/form com Zod.
+  - `actions/*.ts`: server actions e operações Prisma.
+  - `components/*`: UI específica do domínio.
 
 ## Fluxo de Mutação
 
@@ -118,6 +125,25 @@ Tratamento de erro:
 - `P2025` (not found) -> erro de domínio.
 - `P2003` (FK/dependência) -> bloqueio de remoção.
 
+## Dicionário e CRUD Dinâmico
+
+- Metadados de tabela/coluna em `DictionaryTable` e `DictionaryColumn`.
+- Execução de DDL e CRUD dinâmico em `lib/dictionary/*`.
+- Rotas:
+  - `/admin/dictionaries`
+  - `/admin/dictionaries/[id]/columns`
+  - `/crud/[schema]/[table]`
+- Segurança:
+  - acesso apenas a tabelas registradas em dicionário,
+  - bloqueio para tabelas de sistema,
+  - sanitização de identificadores SQL.
+
+## Menus Dinâmicos
+
+- Menus carregados do banco por `lib/menu/loader.ts`.
+- Gestão administrativa em `/admin/menus`.
+- Reordenação visual via drag-and-drop na lista paginada de menus (persistida por Server Action).
+
 ## Dados e Banco
 
 Modelos principais em `prisma/schema.prisma`:
@@ -126,6 +152,10 @@ Modelos principais em `prisma/schema.prisma`:
 - `Role`
 - `UserRole`
 - `Factory`
+- `Menu`
+- `MenuRole`
+- `DictionaryTable`
+- `DictionaryColumn`
 
 Cliente Prisma gerado em `lib/generated/prisma`.
 

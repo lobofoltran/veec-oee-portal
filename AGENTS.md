@@ -9,10 +9,9 @@ Manter e evoluir o **VEEC OEE Portal** com segurança, previsibilidade e consist
 ## Regras de Trabalho
 
 1. Preserve o padrão por domínio:
-   - `app/(app)/<dominio>/_lib` para regra de negócio e acesso a dados.
-   - `app/(app)/<dominio>/_components` para componentes de UI do domínio.
-   - `app/(app)/<dominio>/*.tsx` para páginas e composição.
-2. Toda mutação deve passar por **Server Actions** em `_lib/actions.ts`.
+   - Domínios modernos (`factories`, `users`): `app/(app)/<dominio>/_lib`, `app/(app)/<dominio>/_components`.
+   - Domínios administrativos (`admin/menus`, `admin/dictionaries`): `actions`, `schema`, `components`.
+2. Toda mutação deve passar por **Server Actions** (`_lib/actions.ts` ou `actions/*.ts` conforme domínio).
 3. Faça validação de entrada com **Zod** antes de chamar service/repository.
 4. Controle de permissão deve ser explícito (`require*Session`, `require*Manager`, `canManage*`).
 5. Use componentes de `components/ui/*` (shadcn) antes de criar UI customizada.
@@ -23,7 +22,7 @@ Manter e evoluir o **VEEC OEE Portal** com segurança, previsibilidade e consist
 
 Para criação/edição/exclusão:
 
-`UI -> Server Action -> Schema (Zod) -> Service -> Repository (Prisma) -> DB`
+`UI -> Server Action -> Schema (Zod) -> Service/Repository -> DB`
 
 - **Action**: valida input, aplica autorização, trata erro de negócio, chama `revalidatePath`.
 - **Service**: regras de negócio e mapeamento de erros Prisma (`P2002`, `P2025`, etc).
@@ -35,7 +34,7 @@ Para criação/edição/exclusão:
 - Sessão em JWT com `session.user.id` e `session.user.roles`.
 - Tipagem estendida em `types/next-auth.d.ts`.
 - Papéis atuais: `ADMIN`, `MANAGER`, `OPERATOR`.
-- Gestão de `users` e `factories`: `ADMIN` e `MANAGER`.
+- Gestão de `users`, `factories`, `menus` e `dictionaries`: `ADMIN` e `MANAGER`.
 
 ## UI/UX e Navegação
 
@@ -44,6 +43,8 @@ Para criação/edição/exclusão:
 - Estado ativo de menu via `usePathname`.
 - Header usa breadcrumb baseado na rota (`components/site-header.tsx`).
 - Theming (light/dark/system) no menu de usuário (`components/nav-user.tsx`) com `next-themes`.
+- Menus da sidebar carregam do banco (`lib/menu/loader.ts`).
+- Em `admin/menus`, a ordenação pode ser feita por drag and drop na grade quando `sortBy=order` e `sortDir=asc`.
 
 ## Qualidade Mínima Antes de Entregar
 
@@ -86,3 +87,9 @@ Ao adicionar novo domínio (`machines`, por exemplo):
 3. Implementar actions + service + repository + schema.
 4. Incluir rota no sidebar se aplicável.
 5. Adicionar cobertura de testes de unidade/integrados/e2e.
+
+## CRUD Dinâmico por Dicionário
+
+- Rotas dinâmicas: `app/(app)/crud/[schema]/[table]`.
+- Formulários dinâmicos devem usar componentes shadcn (`Input`, `Textarea`, `Select`) e não HTML nativo para consistência.
+- Busca, paginação e ordenação devem manter estado em query params (`q`, `page`, `pageSize`).

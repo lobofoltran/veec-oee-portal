@@ -1,124 +1,90 @@
 # VEEC OEE Portal
 
-Portal web para operação interna com autenticação, dashboard e módulos de cadastro (fábricas e usuários).
-
-## Tecnologias
-
+## Stack
 - Next.js 16 (App Router)
-- React 19 + TypeScript
-- NextAuth (credentials)
-- Prisma + PostgreSQL
-- Tailwind CSS v4 + shadcn/ui
-- Vitest + Playwright
+- TypeScript
+- Prisma + PostgreSQL (infra tables)
+- Kysely/SQL raw (dynamic DDL + CRUD)
+- NextAuth credentials
+- shadcn/ui + Radix
+- React Hook Form + Zod
+- TanStack Table
+- Vitest + RTL + Playwright
 
-## Pré-requisitos
-
-- Node.js 20+
-- pnpm 9+
-- PostgreSQL disponível
-
-## Configuração
-
-1. Instale dependências:
-
-```bash
-pnpm install
-```
-
-2. Configure variáveis de ambiente em `.env`:
+## Environment
+Create `.env` from `.env.example`:
 
 ```env
-DATABASE_URL=postgresql://...
-NEXTAUTH_SECRET=...
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/veec_oee_portal
+NEXTAUTH_SECRET=change-this-secret
 NEXTAUTH_URL=http://localhost:3000
+AUTH_TRUST_HOST=true
 ```
 
-3. Gere client Prisma e sincronize schema:
-
+## Local setup
 ```bash
-pnpm prisma generate
-pnpm prisma db push
-```
-
-4. Popule dados iniciais (roles + admin):
-
-```bash
+pnpm i
+docker compose up -d
+pnpm db:migrate
+pnpm db:generate
 pnpm tsx prisma/seed.ts
-```
-
-Credenciais padrão de desenvolvimento (seed):
-
-- Email: `admin@veec.com`
-- Senha: `admin123`
-
-## Executar
-
-```bash
 pnpm dev
 ```
 
-Aplicação em `http://localhost:3000`.
+## Main Modules
+- `factories` and `users` CRUD modules
+- `admin/dictionaries` metadata builder
+- `admin/menus` sidebar/menu management with drag-and-drop reorder
+- Dynamic CRUD routes generated from dictionary metadata: `/crud/[schema]/[table]`
+
+## Data Dictionary
+Admin can register dictionary tables and columns in:
+- `/admin/dictionaries`
+- `/admin/dictionaries/[id]/columns`
+
+Flow:
+`UI -> Server Action -> Zod -> Prisma metadata -> DDL engine -> PostgreSQL`
+
+## Dynamic CRUD
+Generated runtime CRUD routes:
+- `/crud/[schema]/[table]`
+- `/crud/[schema]/[table]/new`
+- `/crud/[schema]/[table]/[id]`
+
+Safety constraints:
+- Only dictionary-registered tables are accessible
+- `isSystem` tables are blocked
+- SQL identifiers validated (`[a-zA-Z_][a-zA-Z0-9_]*`)
+- Identifiers are quoted and never interpolated unchecked
+
+## Menu Builder
+- Menus stored in `Menu` and `MenuRole`
+- Sidebar is DB-driven (`components/app-sidebar.tsx` + `lib/menu/loader.ts`)
+- Admin UI:
+  - `/admin/menus`
+- Menu ordering:
+  - drag-and-drop in table view
+  - persisted via server action
+  - works in ordering mode (`sortBy=order`, `sortDir=asc`)
+- Bootstrap seed creates default entries including Admin -> Dictionary and Admin -> Menus
 
 ## Scripts
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:integration
+pnpm test:e2e
+pnpm test:all
+pnpm db:migrate
+pnpm db:generate
+pnpm db:push
+pnpm playwright:install
+pnpm playwright:test
+```
 
-- `pnpm dev`: ambiente local
-- `pnpm build`: build de produção
-- `pnpm start`: iniciar build
-- `pnpm lint`: lint
-- `pnpm test`: testes unitários/integrados (Vitest)
-- `pnpm coverage`: cobertura Vitest
-- `pnpm test:e2e`: testes E2E (Playwright)
-
-## Rotas Principais
-
-- `/login`: autenticação
-- `/dashboard`: visão executiva
-- `/factories`: CRUD de fábricas
-- `/users`: CRUD de usuários
-
-Rotas protegidas por middleware (`proxy.ts`): `/dashboard`, `/factories`, `/users`.
-
-## Autorização (RBAC)
-
-Papéis:
-
-- `ADMIN`
-- `MANAGER`
-- `OPERATOR`
-
-Permissões:
-
-- Gestão de fábricas e usuários: `ADMIN` e `MANAGER`.
-- Demais perfis podem autenticar, mas sem acesso a ações de gestão.
-
-## Estrutura por Domínio
-
-Cada módulo em `app/(app)/<dominio>` segue:
-
-- `_lib/schema.ts`: validação
-- `_lib/repository.ts`: Prisma
-- `_lib/service.ts`: regras de negócio
-- `_lib/actions.ts`: server actions
-- `_components/*`: UI
-
-## Navegação e UX
-
-- Sidebar com estados `hover` e `selecionado`.
-- Breadcrumb dinâmico no header.
-- Menu de usuário com:
-  - dados da sessão autenticada
-  - troca de tema (`Claro`, `Escuro`, `Sistema`)
-  - logout
-
-## Testes
-
-- Unitários: `tests/unit`
-- Integração: `tests/integration`
-- E2E: `tests/e2e`
-
-Playwright sobe `next dev` automaticamente via `playwright.config.ts`.
-
-## Documentação Complementar
-
-- `ARCHITECTURE.md`: visão técnica e fluxos
-- `AGENTS.md`: guia de contribuição para agentes/automações
+## Tests
+- Unit: identifier validation, DDL mapping, Zod builder, menu tree
+- Integration: dictionary DDL + CRUD + FK validation
+- Integration: menu reorder action
+- E2E: users CRUD and dictionary/menu flow
