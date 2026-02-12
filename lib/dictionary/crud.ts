@@ -23,7 +23,7 @@ async function assertAccessibleTable(schema: string, table: string): Promise<Tab
   const meta = await getTableMeta(schema, table);
 
   if (!meta || meta.isSystem) {
-    throw new Error("Tabela não permitida no dicionário.");
+    throw new Error("Tabela solicitada não encontrada no dicionário de dados.");
   }
 
   return meta;

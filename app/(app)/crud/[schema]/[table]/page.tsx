@@ -1,6 +1,8 @@
 import { listRows, resolveReferenceLabels } from "@/lib/dictionary/crud";
+import { sanitizeCrudError } from "@/lib/dictionary/error";
 import { prisma } from "@/lib/prisma";
 
+import { CrudErrorFeedback } from "../../_components/crud-error-feedback";
 import { CrudNewActions } from "../../_components/crud-new-actions";
 import { CrudTable } from "../../_components/crud-table";
 import { CrudSearch } from "../../_components/crud-search";
@@ -21,6 +23,20 @@ function parsePositiveInt(value: string | undefined, fallback: number) {
   return Math.floor(parsed);
 }
 
+function mapCrudLoadErrorMessage(error: unknown) {
+  const message = sanitizeCrudError(error, "Não foi possível carregar a tabela solicitada.");
+  const normalized = message.toLowerCase();
+
+  const isTableNotMaterialized =
+    normalized.includes("relation") && normalized.includes("does not exist");
+
+  if (isTableNotMaterialized) {
+    return "Esta tabela ainda não foi efetivada no banco. Vá em Dicionário de Dados, crie/valide as colunas e clique em Executar para materializar a estrutura antes de abrir o CRUD.";
+  }
+
+  return message;
+}
+
 export default async function CrudListPage({ params, searchParams }: Props) {
   await requireAdminSession();
   const { schema, table } = await params;
@@ -29,12 +45,43 @@ export default async function CrudListPage({ params, searchParams }: Props) {
   const q = (first(qp.q) ?? "").trim();
   const page = parsePositiveInt(first(qp.page), 1);
   const pageSize = Math.min(parsePositiveInt(first(qp.pageSize) ?? first(qp.limit), 10), 100);
+  const errorFromQuery = typeof qp.error === "string" ? decodeURIComponent(qp.error) : "";
 
-  const result = await listRows(schema, table, {
-    page,
-    pageSize,
-    search: q || undefined,
-  });
+  let data:
+    | {
+        result: Awaited<ReturnType<typeof listRows>>;
+        hasMenu: boolean;
+      }
+    | null = null;
+  let loadError: string | null = null;
+
+  try {
+    const result = await listRows(schema, table, {
+      page,
+      pageSize,
+      search: q || undefined,
+    });
+
+    const href = `/crud/${schema}/${table}`;
+    const hasMenu = Boolean(await prisma.menu.findFirst({ where: { href } }));
+    data = { result, hasMenu };
+  } catch (error) {
+    loadError = mapCrudLoadErrorMessage(error);
+  }
+
+  if (!data) {
+    return (
+      <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+        <div>
+          <h1 className="text-2xl font-semibold">CRUD dinâmico</h1>
+          <p className="text-muted-foreground text-sm">Schema: {schema} | Tabela: {table}</p>
+        </div>
+        <CrudErrorFeedback title="Falha ao carregar tabela" message={loadError ?? "Erro desconhecido."} />
+      </div>
+    );
+  }
+
+  const { result, hasMenu } = data;
   const totalPages = Math.max(Math.ceil(result.total / result.pageSize), 1);
   const paramsForReturn = new URLSearchParams();
   if (q) paramsForReturn.set("q", q);
@@ -43,7 +90,6 @@ export default async function CrudListPage({ params, searchParams }: Props) {
   const returnTo = paramsForReturn.toString() ? `/crud/${schema}/${table}?${paramsForReturn.toString()}` : `/crud/${schema}/${table}`;
 
   const href = `/crud/${schema}/${table}`;
-  const hasMenu = Boolean(await prisma.menu.findFirst({ where: { href } }));
   const displayMaps = await resolveReferenceLabels(result.table, result.rows);
   const menuPrefill = new URLSearchParams({
     name: result.table.label,
@@ -57,6 +103,8 @@ export default async function CrudListPage({ params, searchParams }: Props) {
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+      {errorFromQuery ? <CrudErrorFeedback message={errorFromQuery} /> : null}
+
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">{result.table.label}</h1>
