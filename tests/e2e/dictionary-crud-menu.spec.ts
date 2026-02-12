@@ -34,7 +34,8 @@ test("dictionary CRUD + select column + menu helper", async ({ page }) => {
 
   await page.goto(`/crud/public/${tableName}`);
   await page.getByRole("link", { name: "Novo registro" }).click();
-  await page.selectOption("select[name='status']", "open");
+  await page.locator("#status").click();
+  await page.getByRole("option", { name: "Aberto" }).click();
   await page.getByRole("button", { name: "Salvar" }).click();
   await page.waitForURL(new RegExp(`/crud/public/${tableName}`));
 
