@@ -121,7 +121,6 @@ export function MenuForm({ mode, initialMenu, prefill, folders }: { mode: "creat
             name="icon"
             render={({ field }) => (
               <div className="space-y-2">
-                <IconPreview value={field.value} />
                 <IconSelect value={field.value} onValueChange={field.onChange} />
               </div>
             )}
