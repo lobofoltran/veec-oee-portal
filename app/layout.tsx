@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "VEEC OEE Portal",
   description: "Portal de monitoramento e análise de OEE para fábricas, fornecendo insights em tempo real sobre eficiência, disponibilidade e desempenho dos equipamentos.",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
 };
 
 export default function RootLayout({

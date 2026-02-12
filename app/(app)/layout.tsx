@@ -1,6 +1,7 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { authOptions } from "@/lib/auth"
 import { getServerSession } from "next-auth"
@@ -28,11 +29,13 @@ export default async function AppLayout({
             name: session?.user?.name ?? null,
             email: session?.user?.email ?? null,
             avatar: null,
+            role: session?.user?.roles?.[0] ?? (process.env.NODE_ENV !== "production" ? "ADMIN" : null),
           }}
         />
         <SidebarInset>
           <SiteHeader />
           {children}
+          <Toaster />
         </SidebarInset>
       </SidebarProvider>
     </TooltipProvider>

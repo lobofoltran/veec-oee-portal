@@ -1,10 +1,8 @@
-"use client"
+import * as React from "react";
+import Link from "next/link";
 
-import * as React from "react"
-
-import { NavDocuments } from "@/components/nav-documents"
-import { NavMain } from "@/components/nav-main"
-import { NavUser } from "@/components/nav-user"
+import { NavUser } from "@/components/nav-user";
+import { SidebarMenuTree } from "@/components/sidebar-menu-tree";
 import {
   Sidebar,
   SidebarContent,
@@ -13,75 +11,30 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { HugeiconsIcon } from "@hugeicons/react"
-import {
-  DashboardSquare01Icon,
-  SearchIcon,
-  CommandIcon,
-  Database01Icon,
-  UserGroupIcon,
-} from "@hugeicons/core-free-icons"
-import Link from "next/link"
+} from "@/components/ui/sidebar";
+import { getMenuTreeForRole } from "@/lib/menu/loader";
 
-const data = {
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: (
-        <HugeiconsIcon icon={DashboardSquare01Icon} strokeWidth={2} />
-      ),
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Search",
-      url: "#",
-      icon: (
-        <HugeiconsIcon icon={SearchIcon} strokeWidth={2} />
-      ),
-    },
-  ],
-  registrations: [
-    {
-      name: "Fábricas",
-      url: "/factories",
-      icon: (
-        <HugeiconsIcon icon={Database01Icon} strokeWidth={2} />
-      ),
-    },
-    {
-      name: "Usuários",
-      url: "/users",
-      icon: (
-        <HugeiconsIcon icon={UserGroupIcon} strokeWidth={2} />
-      ),
-    },
-  ],
-}
+export type SidebarUser = {
+  name?: string | null;
+  email?: string | null;
+  avatar?: string | null;
+  role?: string | null;
+};
 
-type SidebarUser = {
-  name?: string | null
-  email?: string | null
-  avatar?: string | null
-}
-
-export function AppSidebar({
+export async function AppSidebar({
   user,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
-  user?: SidebarUser
+  user?: SidebarUser;
 }) {
+  const menuTree = await getMenuTreeForRole(user?.role ?? undefined);
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
-            >
+            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:p-1.5!">
               <Link href="/dashboard">
                 <span className="text-base font-semibold">VEEC OEE Portal</span>
               </Link>
@@ -90,17 +43,11 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments
-          label="Cadastros"
-          items={data.registrations}
-        />
+        <SidebarMenuTree items={menuTree} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
-
-// <NavSecondary items={data.navSecondary} className="mt-auto" />

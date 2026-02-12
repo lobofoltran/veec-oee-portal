@@ -16,6 +16,11 @@ function formatSegment(segment: string) {
   if (segment === "dashboard") return "Dashboard"
   if (segment === "factories") return "Fábricas"
   if (segment === "users") return "Usuários"
+  if (segment === "admin") return "Admin"
+  if (segment === "dictionary") return "Dicionário"
+  if (segment === "tables") return "Tabelas"
+  if (segment === "menus") return "Menus"
+  if (segment === "crud") return "CRUD"
   return segment
     .split("-")
     .filter(Boolean)
